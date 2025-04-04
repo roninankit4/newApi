@@ -12,17 +12,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Assignment.Dto.AuthenticationRequest;
 import com.Assignment.Dto.AuthenticationResponse;
 import com.Assignment.Dto.RegisterRequest;
-import com.Assignment.Service.AuthenticationService;
+import com.Assignment.Service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-	private AuthenticationService authenticationService;
+	private UserService authenticationService;
 
     @Autowired // Can be omitted in Spring 4.3+ if only one constructor
-    public AuthenticationController(AuthenticationService authenticationService) {
+    public AuthenticationController(UserService authenticationService) {
         this.authenticationService = authenticationService;
     }
    

@@ -19,11 +19,13 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
     
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
     
+    @Column(nullable = false)
     private String password;
     
+    @Column(nullable = false)
     private boolean active = true;
 
     // No-args constructor
@@ -113,7 +115,7 @@ public class User implements UserDetails {
 		this.active = active;
 	}
 
-	// UserDetails methods
+	
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -146,7 +148,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     public void setPassword(String password) {

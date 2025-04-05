@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Assignment.Dto.ExpenseDto;
+import com.Assignment.Dto.ExpenseResponseDto;
 import com.Assignment.Dto.MonthlyReportDto;
 import com.Assignment.Entity.Expense;
 import com.Assignment.Entity.User;
@@ -42,7 +43,7 @@ public class ExpenseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Expense>> getAllExpenses(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<ExpenseResponseDto>> getAllExpenses(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(expenseService.getAllExpensesByUserId(user.getId()));
     }
 
@@ -67,7 +68,7 @@ public class ExpenseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Expense> updateExpense(
+    public ResponseEntity<ExpenseResponseDto> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseDto expenseDto,
             @AuthenticationPrincipal User user) {

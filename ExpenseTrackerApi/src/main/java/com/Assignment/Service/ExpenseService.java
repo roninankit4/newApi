@@ -22,6 +22,7 @@ import com.Assignment.Exception.ExpenseErrorCode;
 import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Repository.ExpenseRepository;
 import com.Assignment.Repository.UserRepository;
+import com.Assignment.Dto.ExpenseResponseDto;
 
 @Service
 public class ExpenseService {
@@ -33,13 +34,18 @@ public class ExpenseService {
     private ExcelReportService excelReportService;
 
 
-    public List<Expense> getAllExpensesByUserId(Long userId) {
+    public List<ExpenseResponseDto> getAllExpensesByUserId(Long userId) {
         List<Expense> expenses = expenseRepository.findByUserId(userId);
+        
         if (expenses.isEmpty()) {
             throw new ExpenseException(ExpenseErrorCode.NO_EXPENSES_FOUND);
         }
-        return expenses;
+    
+        return expenses.stream()
+                       .map(this::mapToResponseDto)
+                       .toList();
     }
+    
 
     public Expense createExpense(ExpenseDto dto, User user) {
         // 1. Validate amount
@@ -73,7 +79,8 @@ public class ExpenseService {
         
         return expenseRepository.save(expense);
     }
-    public Expense updateExpense(Long id, ExpenseDto dto, User user) {
+
+    public ExpenseResponseDto updateExpense(Long id, ExpenseDto dto, User user) {
         Expense existing = expenseRepository.findByIdAndUserId(id, user.getId())
             .orElseThrow(() -> new ExpenseException(
                 ExpenseErrorCode.EXPENSE_NOT_FOUND,
@@ -85,7 +92,7 @@ public class ExpenseService {
         existing.setCategory(dto.getCategory());
         existing.setDate(dto.getDate());
         
-        return expenseRepository.save(existing);
+        return mapToResponseDto(expenseRepository.save(existing));
     }
 
  // Delete expense
@@ -143,4 +150,16 @@ public class ExpenseService {
         
         return excelReportService.generateExcelReport(categories, total, year, month);
     }
+
+    public ExpenseResponseDto mapToResponseDto(Expense expense) {
+        return new ExpenseResponseDto(
+            expense.getId(),
+            expense.getAmount(),
+            expense.getDescription(),
+            expense.getCategory(),
+            expense.getDate(),
+            expense.getUser().getId()
+        );
+    }
+    
 }

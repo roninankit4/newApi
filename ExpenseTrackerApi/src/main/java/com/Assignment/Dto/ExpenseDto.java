@@ -1,6 +1,9 @@
 package com.Assignment.Dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public class ExpenseDto {
@@ -12,10 +15,14 @@ public class ExpenseDto {
     @NotBlank(message = "Category is required")
     private String category;
     
-    public ExpenseDto(double amount, String description, String category) {
+    @NotNull(message = "Date is required")
+    private LocalDate date; 
+    
+    public ExpenseDto(double amount, String description, String category, LocalDate date) {
         this.amount = amount;
         this.description = description;
         this.category = category;
+        this.date = date;
     }
 	
 	 public ExpenseDto() {
@@ -45,7 +52,13 @@ public class ExpenseDto {
 		this.category = category;
 	}
 
-    // Getters, Setters, Constructors...
+	public LocalDate getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
     
     
 }

@@ -9,10 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.assignment.repository")
 @EntityScan(basePackages = "com.assignment.entity")
-@ComponentScan(basePackages = {"com.Assignment",
-"com.Assignment.Controller",
-"com.Assignment.Service",
-"com.Assignment.Security"})
+@ComponentScan(basePackages = {"com.Assignment"})
 public class ExpenseTrackerApiApplication {
 
 	public static void main(String[] args) {

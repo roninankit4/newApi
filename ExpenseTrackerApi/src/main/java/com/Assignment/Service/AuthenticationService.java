@@ -13,6 +13,8 @@ import com.Assignment.Dto.AuthenticationRequest;
 import com.Assignment.Dto.AuthenticationResponse;
 import com.Assignment.Dto.RegisterRequest;
 import com.Assignment.Entity.User;
+import com.Assignment.Exception.ExpenseErrorCode;
+import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import com.Assignment.Security.JwtService;
@@ -38,11 +40,11 @@ public class AuthenticationService {
     }
 
     public ResponseEntity<?> register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already exists");
+    	if (userRepository.existsByEmail(request.getEmail())) {
+            throw new ExpenseException(ExpenseErrorCode.EMAIL_EXISTS);
         }
         if (request.getPassword().length() < 8) {
-            return ResponseEntity.badRequest().body("Password too weak");
+            throw new ExpenseException(ExpenseErrorCode.WEAK_PASSWORD);
         }
 
         User user = new User();
@@ -65,16 +67,16 @@ public class AuthenticationService {
             );
             
             User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-                
-            if (!user.isActive()) {
-                throw new RuntimeException("Account disabled");
-            }
+                    .orElseThrow(() -> new ExpenseException(ExpenseErrorCode.USER_NOT_FOUND));
+                    
+                if (!user.isActive()) {
+                    throw new ExpenseException(ExpenseErrorCode.ACCOUNT_DISABLED);
+                }
             
             return new AuthenticationResponse(jwtService.generateToken(user));
             
         } catch (BadCredentialsException e) {
-            throw new RuntimeException("Invalid credentials", e);
+        	throw new ExpenseException(ExpenseErrorCode.INVALID_CREDENTIALS);
         }
     }
 }

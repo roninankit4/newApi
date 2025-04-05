@@ -171,7 +171,7 @@ public class ExpenseController {
          @RequestParam(required = true, name = "year") int year,
          @RequestParam(required = true, name = "month") int month,
          @AuthenticationPrincipal User user) {
-     
+     System.out.println("hghgncg");
      if (month < 1 || month > 12) {
          throw new ExpenseException(
              ExpenseErrorCode.INVALID_MONTH,

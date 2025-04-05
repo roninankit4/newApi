@@ -1,35 +1,56 @@
 package com.Assignment.Exception;
 
-
-
-import com.Assignment.Dto.ErrorResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.context.request.WebRequest;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(ExpenseException.class)
-    public ResponseEntity<ErrorResponse> handleExpenseException(ExpenseException ex) {
-        ErrorResponse response = new ErrorResponse(
-            ex.getErrorCode().name(),
-            ex.getErrorCode().getMessage(),
-            ex.getDetails()
-        );
-        return ResponseEntity
-            .status(ex.getErrorCode().getHttpStatus())
-            .body(response);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(
+            ResourceNotFoundException exception,
+            WebRequest webRequest) {
+        
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false));
+        
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        ErrorResponse response = new ErrorResponse(
-            "INVALID_INPUT",
-            "Invalid value for parameter: " + ex.getName(),
-            null
-        );
-        return ResponseEntity.badRequest().body(response);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorDetails> handleValidationExceptions(
+            MethodArgumentNotValidException exception,
+            WebRequest webRequest) {
+        
+        String errorMessage = exception.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                errorMessage,
+                webRequest.getDescription(false));
+        
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorDetails> handleGlobalException(
+            Exception exception,
+            WebRequest webRequest) {
+        
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false));
+        
+        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

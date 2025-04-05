@@ -71,7 +71,7 @@ public class ExpenseController {
                 errors.put(err.getField(), err.getDefaultMessage()));
             
             throw new ExpenseException(
-                ExpenseErrorCode.VALIDATION_FAILED,
+                ExpenseErrorCode.INVALID_EXPENSE_DATA,
                 Map.of("violations", errors)
             );
         }
@@ -98,7 +98,7 @@ public class ExpenseController {
                 errors.put(err.getField(), err.getDefaultMessage()));
             
             throw new ExpenseException(
-                ExpenseErrorCode.VALIDATION_FAILED,
+                ExpenseErrorCode.INVALID_EXPENSE_DATA,
                 Map.of("violations", errors)
             );
         }
@@ -134,7 +134,7 @@ public class ExpenseController {
         // API Contract Validation
         if (start == null) {
             throw new ExpenseException(
-                ExpenseErrorCode.MISSING_PARAMETER,
+                ExpenseErrorCode.MISSING_REQUIRED_FIELD,
                 Map.of("parameter", "start", "message", "Start date is required")
             );
         }
@@ -174,7 +174,7 @@ public class ExpenseController {
      System.out.println("hghgncg");
      if (month < 1 || month > 12) {
          throw new ExpenseException(
-             ExpenseErrorCode.INVALID_MONTH,
+             ExpenseErrorCode.MISSING_REQUIRED_FIELD,
              Map.of("message", "Month must be between 1 and 12")
          );
      }
@@ -194,7 +194,7 @@ public class ExpenseController {
      } catch (IOException ex) {
          logger.error("IO error during report generation", ex);
          throw new ExpenseException(
-             ExpenseErrorCode.EXCEL_GENERATION_FAILED,
+             ExpenseErrorCode.INTERNAL_SERVER_ERROR,
              Map.of("year", year, "month", month)
          );
      }

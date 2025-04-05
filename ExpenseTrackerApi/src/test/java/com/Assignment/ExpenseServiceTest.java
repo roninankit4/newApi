@@ -41,7 +41,7 @@ class ExpenseServiceTest {
     private final User testUser = new User(1L, "Test User", "test@example.com", "password", true);
     private final ExpenseDto validDto = new ExpenseDto(100.0, "Food", "Lunch", LocalDate.now());
     private final Expense testExpense = new Expense(1L, 100.0, "Lunch", "Food", LocalDate.now(), testUser);
-    private final ExpenseResponseDto testResponseDto = new ExpenseResponseDto(1L, 100.0, "Lunch", "Food", LocalDate.now(), 1L);
+    private final ExpenseResponseDto testResponseDto = new ExpenseResponseDto(1L, 100.0, "Lunch", "Food", LocalDate.now(), 1L, "ankit");
     
     
     @Test

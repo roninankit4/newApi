@@ -25,7 +25,9 @@ public enum ExpenseErrorCode {
     ACCOUNT_DISABLED("Account is disabled", HttpStatus.FORBIDDEN),
     
     // System Errors
-    EXCEL_GENERATION_FAILED("Failed to generate Excel report", HttpStatus.INTERNAL_SERVER_ERROR);
+    EXCEL_GENERATION_FAILED("Failed to generate Excel report", HttpStatus.INTERNAL_SERVER_ERROR),
+    MISSING_PARAMETER("Required parameter is missing", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_FORMAT("Invalid date format. Use YYYY-MM-DD", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus httpStatus;

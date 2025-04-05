@@ -1,6 +1,7 @@
 package com.Assignment.Controller;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.HashMap;
@@ -9,6 +10,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -123,22 +126,32 @@ public class ExpenseController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<Double> getTotalExpenses(
-            @RequestParam @NotNull(message = "Start date is required") LocalDate start,
-            @RequestParam(required = false) LocalDate end,
+    public ResponseEntity<Map<String, Object>> getTotalExpenses(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
             @AuthenticationPrincipal User user) {
-        
-        LocalDate effectiveEnd = (end != null) ? end : LocalDate.now();
-        
-        if (start.isAfter(effectiveEnd)) {
+
+        // API Contract Validation
+        if (start == null) {
             throw new ExpenseException(
-                ExpenseErrorCode.INVALID_DATE_RANGE,
-                Map.of("start", start, "end", effectiveEnd)
+                ExpenseErrorCode.MISSING_PARAMETER,
+                Map.of("parameter", "start", "message", "Start date is required")
             );
         }
+
+        LocalDate effectiveEnd = (end != null) ? end : LocalDate.now();
         
+        // Delegate to service (business validation happens there)
         Double total = expenseService.getTotalExpenses(user.getId(), start, effectiveEnd);
-        return ResponseEntity.ok(total);
+        
+        // Format response
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        return ResponseEntity.ok(Map.of(
+            "total", total,
+            "formattedTotal", df.format(total),
+            "currency", "INR",
+            "period", start + " to " + effectiveEnd
+        ));
     }
 
     @GetMapping("/category-summary")
@@ -153,30 +166,37 @@ public class ExpenseController {
     }
 
     @GetMapping(value = "/monthly-report", 
-               produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    public ResponseEntity<byte[]> getMonthlyExcelReport(
-            @RequestParam int year,
-            @RequestParam int month,
-            @AuthenticationPrincipal User user) {
-        
-        try {
-            byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
-            String filename = String.format("expense-report-%s-%d.xlsx", 
-                                      Month.of(month).name().toLowerCase(), 
-                                      year);
-            
-            return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .body(excelBytes);
-        } catch (ExpenseException ex) {
-            logger.error("Report generation failed for {}-{}: {}", year, month, ex.getMessage());
-            throw ex;
-        } catch (IOException ex) {
-            logger.error("IO error during report generation", ex);
-            throw new ExpenseException(
-                ExpenseErrorCode.EXCEL_GENERATION_FAILED,
-                Map.of("year", year, "month", month)
-            );
-        }
-    }
+            produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+ public ResponseEntity<byte[]> getMonthlyExcelReport(
+         @RequestParam(required = true, name = "year") int year,
+         @RequestParam(required = true, name = "month") int month,
+         @AuthenticationPrincipal User user) {
+     
+     if (month < 1 || month > 12) {
+         throw new ExpenseException(
+             ExpenseErrorCode.INVALID_MONTH,
+             Map.of("message", "Month must be between 1 and 12")
+         );
+     }
+     
+     try {
+         byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
+         String filename = String.format("expense-report-%s-%d.xlsx", 
+                                   Month.of(month).name().toLowerCase(), 
+                                   year);
+         
+         return ResponseEntity.ok()
+             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+             .body(excelBytes);
+     } catch (ExpenseException ex) {
+         logger.error("Report generation failed for {}-{}: {}", year, month, ex.getMessage());
+         throw ex;
+     } catch (IOException ex) {
+         logger.error("IO error during report generation", ex);
+         throw new ExpenseException(
+             ExpenseErrorCode.EXCEL_GENERATION_FAILED,
+             Map.of("year", year, "month", month)
+         );
+     }
+ }
 }

@@ -1,6 +1,8 @@
 package com.Assignment.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -119,16 +121,32 @@ public class ExpenseService {
         logger.info("Deleted expense ID: {}", id);
     }
 
-    public double getTotalExpenses(Long userId, LocalDate start, LocalDate end) {
-        logger.debug("Calculating total expenses for user: {} from {} to {}", userId, start, end);
-        
+    public Double getTotalExpenses(Long userId, LocalDate start, LocalDate end) {
+        // 1. Business Logic Validation
         if (start.isAfter(end)) {
-            logger.error("Invalid date range: {} to {}", start, end);
-            throw new ExpenseException(ExpenseErrorCode.INVALID_DATE_RANGE);
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_DATE_RANGE,
+                Map.of(
+                    "message", "Start date must be before end date",
+                    "start", start.toString(),
+                    "end", end.toString()
+                )
+            );
         }
-        
+
+        // 2. Repository Call
         Double total = expenseRepository.sumByUserIdAndDateRange(userId, start, end);
-        return Optional.ofNullable(total).orElse(0.0);
+        
+        // 3. Result Processing
+        if (total == null) { // No expenses found
+            logger.info("No expenses found for user {} between {} and {}", userId, start, end);
+            return 0.0;
+        }
+
+        // 4. Round to 2 decimal places for financial precision
+        return BigDecimal.valueOf(total)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     public Map<String, Double> getCategoryTotals(Long userId) {

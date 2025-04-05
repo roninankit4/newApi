@@ -3,28 +3,30 @@ package com.Assignment.Exception;
 import org.springframework.http.HttpStatus;
 
 public enum ExpenseErrorCode {
-    // Validation errors (400)
-    INVALID_EXPENSE_DATA("Invalid expense data provided", HttpStatus.BAD_REQUEST),
-    MISSING_REQUIRED_FIELD("Required field is missing", HttpStatus.BAD_REQUEST),
-    INVALID_AMOUNT("Amount must be positive", HttpStatus.BAD_REQUEST),
-    
-    // Authentication/Authorization errors (401/403)
-    UNAUTHORIZED_ACCESS("Unauthorized access", HttpStatus.UNAUTHORIZED),
-    FORBIDDEN_OPERATION("Forbidden operation", HttpStatus.FORBIDDEN),
-    
-    // Not Found errors (404)
-    EXPENSE_NOT_FOUND("Expense not found", HttpStatus.NOT_FOUND),
+    // Resource Not Found (404)
+    EXPENSE_NOT_FOUND("Expense not found or access denied", HttpStatus.NOT_FOUND),
+    NO_EXPENSES_FOUND("No expenses found for this user", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND("User not found", HttpStatus.NOT_FOUND),
-    
-    // Conflict errors (409)
-    DUPLICATE_ENTRY("Duplicate entry detected", HttpStatus.CONFLICT),
-    
-    // Server errors (500)
-    INTERNAL_SERVER_ERROR("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVICE_UNAVAILABLE("Service temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE),
-    
-    // Database errors (503)
-    DATABASE_ERROR("Database operation failed", HttpStatus.SERVICE_UNAVAILABLE);
+    EMPTY_REPORT("No data available for the selected period", HttpStatus.NOT_FOUND),
+
+    // Validation Errors (400)
+    INVALID_AMOUNT("Amount must be positive", HttpStatus.BAD_REQUEST),
+    INVALID_DATE("Date must be provided and cannot be in the future", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_RANGE("Start date must be before end date", HttpStatus.BAD_REQUEST),
+    INVALID_MONTH("Month must be between 1-12", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_FORMAT("Invalid date format. Use YYYY-MM-DD", HttpStatus.BAD_REQUEST),
+    CATEGORY_REQUIRED("Category is required and cannot be blank", HttpStatus.BAD_REQUEST),
+    WEAK_PASSWORD("Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
+    MISSING_PARAMETER("Required parameter is missing", HttpStatus.BAD_REQUEST),
+    VALIDATION_FAILED("Validation failed for one or more fields", HttpStatus.BAD_REQUEST),
+
+    // Authentication/Authorization (401/403/409)
+    INVALID_CREDENTIALS("Invalid email/password", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_DISABLED("Account is disabled", HttpStatus.FORBIDDEN),
+    EMAIL_EXISTS("Email already registered", HttpStatus.CONFLICT),
+
+    // System Errors (500)
+    EXCEL_GENERATION_FAILED("Failed to generate Excel report", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;
     private final HttpStatus httpStatus;

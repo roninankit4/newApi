@@ -35,6 +35,7 @@ public class ExpenseService {
 
 
     public List<ExpenseResponseDto> getAllExpensesByUserId(Long userId) {
+        System.out.println(userId);
         List<Expense> expenses = expenseRepository.findByUserId(userId);
         
         if (expenses.isEmpty()) {
@@ -47,7 +48,7 @@ public class ExpenseService {
     }
     
 
-    public Expense createExpense(ExpenseDto dto, User user) {
+    public ExpenseResponseDto createExpense(ExpenseDto dto, User user) {
         // 1. Validate amount
         if (dto.getAmount() <= 0) {
             throw new ExpenseException(
@@ -77,7 +78,7 @@ public class ExpenseService {
         expense.setDate(dto.getDate() != null ? dto.getDate() : LocalDate.now());
         expense.setUser(user);
         
-        return expenseRepository.save(expense);
+        return mapToResponseDto(expenseRepository.save(expense));
     }
 
     public ExpenseResponseDto updateExpense(Long id, ExpenseDto dto, User user) {

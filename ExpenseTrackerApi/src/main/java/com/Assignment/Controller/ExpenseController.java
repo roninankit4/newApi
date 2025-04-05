@@ -44,11 +44,12 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<List<ExpenseResponseDto>> getAllExpenses(@AuthenticationPrincipal User user) {
+        System.out.println(user);
         return ResponseEntity.ok(expenseService.getAllExpensesByUserId(user.getId()));
     }
 
     @PostMapping
-    public ResponseEntity<Expense> createExpense(
+    public ResponseEntity<ExpenseResponseDto> createExpense(
             @Valid @RequestBody ExpenseDto expenseDto,
             BindingResult bindingResult,  // Captures @Valid errors
             @AuthenticationPrincipal User user) {

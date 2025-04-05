@@ -10,12 +10,8 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 
 import com.Assignment.Dto.ExpenseDto;
 import com.Assignment.Entity.Expense;
@@ -23,7 +19,6 @@ import com.Assignment.Entity.User;
 import com.Assignment.Exception.ExpenseErrorCode;
 import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Repository.ExpenseRepository;
-import com.Assignment.Repository.UserRepository;
 import com.Assignment.Dto.ExpenseResponseDto;
 
 @Service
@@ -184,7 +179,8 @@ public class ExpenseService {
             expense.getDescription(),
             expense.getCategory(),
             expense.getDate(),
-            expense.getUser().getId()
+            expense.getUser().getId(),
+            expense.getUser().getName()
         );
     }
 }

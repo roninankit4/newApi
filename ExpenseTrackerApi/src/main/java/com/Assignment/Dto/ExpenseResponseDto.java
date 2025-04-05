@@ -9,16 +9,18 @@ public class ExpenseResponseDto {
     private String category;
     private LocalDate date;
     private Long userId;
+    private String name;
 
     public ExpenseResponseDto() {}
 
-    public ExpenseResponseDto(Long id, double amount, String description, String category, LocalDate date, Long userId) {
+    public ExpenseResponseDto(Long id, double amount, String description, String category, LocalDate date, Long userId, String name) {
         this.id = id;
         this.amount = amount;
         this.description = description;
         this.category = category;
         this.date = date;
         this.userId = userId;
+        this.name = name;
     }
 
     // Getters and Setters
@@ -70,4 +72,12 @@ public class ExpenseResponseDto {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
+    
+    public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

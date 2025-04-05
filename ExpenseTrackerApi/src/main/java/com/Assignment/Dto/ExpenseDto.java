@@ -3,18 +3,24 @@ package com.Assignment.Dto;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class ExpenseDto {
     @Positive(message = "Amount must be positive")
     private double amount;
-
+    
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
     @NotBlank(message = "Category is required")
+    @Pattern(regexp = "Food|Travel|Entertainment|Utilities|Other", 
+             message = "Invalid category. Allowed: Food, Travel, Entertainment, Utilities, Other")
     private String category;
-    
+
+    @PastOrPresent(message = "Date cannot be in the future")
     private LocalDate date; 
     
     public ExpenseDto(double amount, String description, String category, LocalDate date) {

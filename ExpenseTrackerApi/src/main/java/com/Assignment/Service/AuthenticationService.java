@@ -16,7 +16,6 @@ import com.Assignment.Entity.User;
 import com.Assignment.Exception.ExpenseErrorCode;
 import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import com.Assignment.Security.JwtService;
 
 @Service

@@ -33,6 +33,7 @@ import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Service.ExpenseService;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -123,17 +124,21 @@ public class ExpenseController {
 
     @GetMapping("/summary")
     public ResponseEntity<Double> getTotalExpenses(
-            @RequestParam LocalDate start,
-            @RequestParam LocalDate end,
+            @RequestParam @NotNull(message = "Start date is required") LocalDate start,
+            @RequestParam(required = false) LocalDate end,
             @AuthenticationPrincipal User user) {
-        try {
-            Double total = expenseService.getTotalExpenses(user.getId(), start, end);
-            return ResponseEntity.ok(total);
-        } catch (ExpenseException ex) {
-            logger.warn("Invalid date range for user {}: {} to {}", 
-                user.getId(), start, end);
-            throw ex;
+        
+        LocalDate effectiveEnd = (end != null) ? end : LocalDate.now();
+        
+        if (start.isAfter(effectiveEnd)) {
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_DATE_RANGE,
+                Map.of("start", start, "end", effectiveEnd)
+            );
         }
+        
+        Double total = expenseService.getTotalExpenses(user.getId(), start, effectiveEnd);
+        return ResponseEntity.ok(total);
     }
 
     @GetMapping("/category-summary")

@@ -37,12 +37,17 @@ public class Expense {
     
     public Expense() {}
 
-    public Expense(double amount, String description, String category, User user) {
-        this.amount = amount;
-        this.description = description;
-        this.category = category;
-        this.user = user;
-    }
+	public Expense(Long id, double amount, String description, String category, LocalDate date, User user) {
+		super();
+		this.id = id;
+		this.amount = amount;
+		this.description = description;
+		this.category = category;
+		this.date = date;
+		this.user = user;
+	}
+
+
 
 	public Long getId() {
 		return id;

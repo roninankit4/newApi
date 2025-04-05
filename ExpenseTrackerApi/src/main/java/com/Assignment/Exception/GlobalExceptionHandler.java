@@ -3,6 +3,8 @@ package com.Assignment.Exception;
 
 import com.Assignment.Dto.ErrorResponse;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,23 +18,27 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExpenseException.class)
     public ResponseEntity<ErrorResponse> handleExpenseException(ExpenseException ex) {
+        // Single handler for all your custom exceptions
         ErrorResponse response = new ErrorResponse(
             ex.getErrorCode().name(),
             ex.getErrorCode().getMessage(),
-            ex.getDetails()
+            ex.getDetails() // Already contains all validation details
         );
         return ResponseEntity
             .status(ex.getErrorCode().getHttpStatus())
             .body(response);
     }
 
+    // Optional: Basic framework exception handling (keep minimal)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        ErrorResponse response = new ErrorResponse(
+        return ResponseEntity.badRequest().body(new ErrorResponse(
             "INVALID_INPUT",
-            "Invalid value for parameter: " + ex.getName(),
-            null
-        );
-        return ResponseEntity.badRequest().body(response);
+            "Invalid parameter value",
+            Map.of(
+                "parameter", ex.getName(),
+                "requiredType", ex.getRequiredType().getSimpleName()
+            )
+        ));
     }
 }

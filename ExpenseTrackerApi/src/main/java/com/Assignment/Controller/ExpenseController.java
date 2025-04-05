@@ -166,35 +166,20 @@ public class ExpenseController {
     @GetMapping(value = "/monthly-report", 
             produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
  public ResponseEntity<byte[]> getMonthlyExcelReport(
-         @RequestParam(required = true, name = "year") int year,
-         @RequestParam(required = true, name = "month") int month,
+         @RequestParam(required = false) Integer year, 
+         @RequestParam(required = false) Integer month,
          @AuthenticationPrincipal User user) {
      
-     if (month < 1 || month > 12) {
-         throw new ExpenseException(
-             ExpenseErrorCode.INVALID_MONTH,
-             Map.of("message", "Month must be between 1 and 12")
-         );
-     }
+     // First get validated result from service
+     byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
      
-     try {
-         byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
-         String filename = String.format("expense-report-%s-%d.xlsx", 
-                                   Month.of(month).name().toLowerCase(), 
-                                   year);
-         
-         return ResponseEntity.ok()
-             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-             .body(excelBytes);
-     } catch (ExpenseException ex) {
-         logger.error("Report generation failed for {}-{}: {}", year, month, ex.getMessage());
-         throw ex;
-     } catch (IOException ex) {
-         logger.error("IO error during report generation", ex);
-         throw new ExpenseException(
-             ExpenseErrorCode.EXCEL_GENERATION_FAILED,
-             Map.of("year", year, "month", month)
-         );
-     }
+     // Now safely use the validated parameters
+     String filename = String.format("expense-report-%s-%d.xlsx", 
+                                 Month.of(month).name().toLowerCase(), 
+                                 year);
+     
+     return ResponseEntity.ok()
+         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+         .body(excelBytes);
  }
 }

@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -162,31 +163,62 @@ public class ExpenseService {
         return categoryMap;
     }
     
-    public byte[] generateMonthlyExcelReport(Long userId, int year, int month) throws IOException {
-        logger.debug("Generating monthly report for user: {}, {}-{}", userId, month, year);
-        
+    public byte[] generateMonthlyExcelReport(Long userId, Integer year, Integer month) {
+        // Validate null parameters
+        if (year == null || month == null) {
+            Map<String, String> missing = new LinkedHashMap<>();
+            if (year == null) missing.put("year", "Year is required");
+            if (month == null) missing.put("month", "Month is required (1-12)");
+            
+            throw new ExpenseException(
+                ExpenseErrorCode.MISSING_PARAMETER,
+                Map.of("missingParameters", missing)
+            );
+        }
+
+        // Validate month range
         if (month < 1 || month > 12) {
-            logger.error("Invalid month: {}", month);
-            throw new ExpenseException(ExpenseErrorCode.INVALID_MONTH);
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_MONTH,
+                Map.of("providedValue", month)
+            );
         }
 
+        // Get data from repository
         List<Object[]> results = expenseRepository.getMonthlyCategoryTotals(userId, year, month);
+        
+        // Check for empty results
         if (results.isEmpty()) {
-            logger.warn("No data for monthly report - User: {}, {}-{}", userId, month, year);
-            throw new ExpenseException(ExpenseErrorCode.EMPTY_REPORT);
+            throw new ExpenseException(
+                ExpenseErrorCode.EMPTY_REPORT,
+                Map.of("year", year, "month", month)
+            );
         }
 
-        Map<String, Double> categories = new HashMap<>();
+        // Process data
+        Map<String, Double> categories = new LinkedHashMap<>();
         double total = 0.0;
+        
         for (Object[] row : results) {
             String category = (String) row[0];
             Double amount = (Double) row[1];
             categories.put(category, amount);
             total += amount;
         }
-        
-        logger.info("Generated monthly report for user: {}, {}-{}", userId, month, year);
-        return excelReportService.generateExcelReport(categories, total, year, month);
+
+        // Generate Excel using your dedicated service
+        try {
+            return excelReportService.generateExcelReport(categories, total, year, month);
+        } catch (IOException e) {
+            throw new ExpenseException(
+                ExpenseErrorCode.EXCEL_GENERATION_FAILED,
+                Map.of(
+                    "error", "Failed to generate Excel file",
+                    "year", year,
+                    "month", month
+                )
+            );
+        }
     }
 
     private ExpenseResponseDto mapToResponseDto(Expense expense) {

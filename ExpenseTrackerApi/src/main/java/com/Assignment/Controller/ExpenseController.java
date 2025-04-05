@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,8 +37,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/expenses")
 public class ExpenseController {
-
     private final ExpenseService expenseService;
+    private static final Logger logger = LoggerFactory.getLogger(ExpenseController.class);
 
     public ExpenseController(ExpenseService expenseService) {
         this.expenseService = expenseService;
@@ -44,17 +46,21 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<List<ExpenseResponseDto>> getAllExpenses(@AuthenticationPrincipal User user) {
-        System.out.println(user);
-        return ResponseEntity.ok(expenseService.getAllExpensesByUserId(user.getId()));
+        try {
+            List<ExpenseResponseDto> expenses = expenseService.getAllExpensesByUserId(user.getId());
+            return ResponseEntity.ok(expenses);
+        } catch (ExpenseException ex) {
+            logger.warn("No expenses found for user: {}", user.getId());
+            throw ex;
+        }
     }
 
     @PostMapping
     public ResponseEntity<ExpenseResponseDto> createExpense(
             @Valid @RequestBody ExpenseDto expenseDto,
-            BindingResult bindingResult,  // Captures @Valid errors
+            BindingResult bindingResult,
             @AuthenticationPrincipal User user) {
         
-        // Handle @Valid errors (e.g., @NotBlank, @Positive)
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             bindingResult.getFieldErrors().forEach(err -> 
@@ -65,23 +71,54 @@ public class ExpenseController {
                 Map.of("violations", errors)
             );
         }
-        return ResponseEntity.ok(expenseService.createExpense(expenseDto, user));
+        
+        try {
+            ExpenseResponseDto expense = expenseService.createExpense(expenseDto, user);
+            return ResponseEntity.ok(expense);
+        } catch (ExpenseException ex) {
+            logger.error("Failed to create expense: {}", ex.getMessage());
+            throw ex;
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ExpenseResponseDto> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseDto expenseDto,
+            BindingResult bindingResult,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(expenseService.updateExpense(id, expenseDto, user));
+            
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(err -> 
+                errors.put(err.getField(), err.getDefaultMessage()));
+            
+            throw new ExpenseException(
+                ExpenseErrorCode.VALIDATION_FAILED,
+                Map.of("violations", errors)
+            );
+        }
+        
+        try {
+            ExpenseResponseDto updatedExpense = expenseService.updateExpense(id, expenseDto, user);
+            return ResponseEntity.ok(updatedExpense);
+        } catch (ExpenseException ex) {
+            logger.error("Failed to update expense {}: {}", id, ex.getMessage());
+            throw ex;
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExpense(
             @PathVariable Long id,
             @AuthenticationPrincipal User user) {
-        expenseService.deleteExpense(id, user);
-        return ResponseEntity.noContent().build();
+        try {
+            expenseService.deleteExpense(id, user);
+            return ResponseEntity.noContent().build();
+        } catch (ExpenseException ex) {
+            logger.error("Failed to delete expense {}: {}", id, ex.getMessage());
+            throw ex;
+        }
     }
 
     @GetMapping("/summary")
@@ -89,12 +126,25 @@ public class ExpenseController {
             @RequestParam LocalDate start,
             @RequestParam LocalDate end,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(expenseService.getTotalExpenses(user.getId(), start, end));
+        try {
+            Double total = expenseService.getTotalExpenses(user.getId(), start, end);
+            return ResponseEntity.ok(total);
+        } catch (ExpenseException ex) {
+            logger.warn("Invalid date range for user {}: {} to {}", 
+                user.getId(), start, end);
+            throw ex;
+        }
     }
 
     @GetMapping("/category-summary")
     public ResponseEntity<Map<String, Double>> getCategoryTotals(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(expenseService.getCategoryTotals(user.getId()));
+        try {
+            Map<String, Double> totals = expenseService.getCategoryTotals(user.getId());
+            return ResponseEntity.ok(totals);
+        } catch (ExpenseException ex) {
+            logger.warn("No expenses found for category summary: {}", user.getId());
+            throw ex;
+        }
     }
 
     @GetMapping(value = "/monthly-report", 
@@ -102,16 +152,26 @@ public class ExpenseController {
     public ResponseEntity<byte[]> getMonthlyExcelReport(
             @RequestParam int year,
             @RequestParam int month,
-            @AuthenticationPrincipal User user) throws IOException {
+            @AuthenticationPrincipal User user) {
         
-        byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
-        
-        String filename = String.format("expense-report-%s-%d.xlsx", 
+        try {
+            byte[] excelBytes = expenseService.generateMonthlyExcelReport(user.getId(), year, month);
+            String filename = String.format("expense-report-%s-%d.xlsx", 
                                       Month.of(month).name().toLowerCase(), 
                                       year);
-        
-        return ResponseEntity.ok()
+            
+            return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .body(excelBytes);
+        } catch (ExpenseException ex) {
+            logger.error("Report generation failed for {}-{}: {}", year, month, ex.getMessage());
+            throw ex;
+        } catch (IOException ex) {
+            logger.error("IO error during report generation", ex);
+            throw new ExpenseException(
+                ExpenseErrorCode.EXCEL_GENERATION_FAILED,
+                Map.of("year", year, "month", month)
+            );
+        }
     }
 }

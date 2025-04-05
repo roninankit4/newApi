@@ -14,11 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-import com.Assignment.Dto.ExpenseDto;
+import com.Assignment.Dto.ExpenseErrorCode;
+import com.Assignment.Dto.ExpenseRequest;
 import com.Assignment.Entity.Expense;
 import com.Assignment.Entity.User;
-import com.Assignment.Exception.ExpenseErrorCode;
 import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Repository.ExpenseRepository;
 import com.Assignment.Dto.ExpenseResponseDto;
@@ -47,7 +46,7 @@ public class ExpenseService {
                      .toList();
     }
 
-    public ExpenseResponseDto createExpense(ExpenseDto dto, User user) {
+    public ExpenseResponseDto createExpense(ExpenseRequest dto, User user) {
         logger.debug("Creating new expense for user: {}", user.getId());
         
         // Validation
@@ -84,7 +83,7 @@ public class ExpenseService {
         return mapToResponseDto(savedExpense);
     }
 
-    public ExpenseResponseDto updateExpense(Long id, ExpenseDto dto, User user) {
+    public ExpenseResponseDto updateExpense(Long id, ExpenseRequest dto, User user) {
         logger.debug("Updating expense ID: {} for user: {}", id, user.getId());
         
         Expense existing = expenseRepository.findByIdAndUserId(id, user.getId())

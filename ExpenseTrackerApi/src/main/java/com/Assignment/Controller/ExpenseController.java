@@ -26,12 +26,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.Assignment.Dto.ExpenseDto;
+import com.Assignment.Dto.ExpenseErrorCode;
+import com.Assignment.Dto.ExpenseRequest;
 import com.Assignment.Dto.ExpenseResponseDto;
 import com.Assignment.Dto.MonthlyReportDto;
 import com.Assignment.Entity.Expense;
 import com.Assignment.Entity.User;
-import com.Assignment.Exception.ExpenseErrorCode;
 import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Service.ExpenseService;
 
@@ -61,7 +61,7 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<ExpenseResponseDto> createExpense(
-            @Valid @RequestBody ExpenseDto expenseDto,
+            @Valid @RequestBody ExpenseRequest expenseDto,
             BindingResult bindingResult,
             @AuthenticationPrincipal User user) {
         
@@ -88,7 +88,7 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<ExpenseResponseDto> updateExpense(
             @PathVariable Long id,
-            @Valid @RequestBody ExpenseDto expenseDto,
+            @Valid @RequestBody ExpenseRequest expenseDto,
             BindingResult bindingResult,
             @AuthenticationPrincipal User user) {
             
@@ -127,31 +127,29 @@ public class ExpenseController {
 
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getTotalExpenses(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
             @AuthenticationPrincipal User user) {
-
-        // API Contract Validation
-        if (start == null) {
-            throw new ExpenseException(
-                ExpenseErrorCode.MISSING_PARAMETER,
-                Map.of("parameter", "start", "message", "Start date is required")
-            );
-        }
-
+        
         LocalDate effectiveEnd = (end != null) ? end : LocalDate.now();
         
-        // Delegate to service (business validation happens there)
+        if (start.isAfter(effectiveEnd)) {
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_DATE_RANGE,
+                Map.of("start", start, "end", effectiveEnd)
+            );
+        }
+        
         Double total = expenseService.getTotalExpenses(user.getId(), start, effectiveEnd);
         
-        // Format response
         DecimalFormat df = new DecimalFormat("#,##0.00");
-        return ResponseEntity.ok(Map.of(
-            "total", total,
-            "formattedTotal", df.format(total),
-            "currency", "INR",
-            "period", start + " to " + effectiveEnd
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("total", total);
+        response.put("formattedTotal", df.format(total));
+        response.put("currency", "INR");
+        response.put("period", start + " to " + effectiveEnd);
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/category-summary")
@@ -171,6 +169,7 @@ public class ExpenseController {
          @RequestParam(required = true, name = "year") int year,
          @RequestParam(required = true, name = "month") int month,
          @AuthenticationPrincipal User user) {
+     
      if (month < 1 || month > 12) {
          throw new ExpenseException(
              ExpenseErrorCode.INVALID_MONTH,

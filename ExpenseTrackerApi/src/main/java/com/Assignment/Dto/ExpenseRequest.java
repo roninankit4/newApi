@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-public class ExpenseDto {
+public class ExpenseRequest {
     @Positive(message = "Amount must be positive")
     private double amount;
     
@@ -23,14 +23,14 @@ public class ExpenseDto {
     @PastOrPresent(message = "Date cannot be in the future")
     private LocalDate date; 
     
-    public ExpenseDto(double amount, String description, String category, LocalDate date) {
+    public ExpenseRequest(double amount, String description, String category, LocalDate date) {
         this.amount = amount;
         this.description = description;
         this.category = category;
         this.date = date;
     }
 	
-	 public ExpenseDto() {
+	 public ExpenseRequest() {
 	}
 
 	public double getAmount() {

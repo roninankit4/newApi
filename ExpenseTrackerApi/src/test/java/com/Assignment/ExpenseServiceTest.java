@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.Assignment.Dto.ExpenseDto;
+import com.Assignment.Dto.ExpenseRequest;
 import com.Assignment.Dto.ExpenseResponseDto;
 import com.Assignment.Entity.Expense;
 import com.Assignment.Entity.User;
@@ -39,7 +39,7 @@ class ExpenseServiceTest {
 
     // Test data using exact constructors
     private final User testUser = new User(1L, "Test User", "test@example.com", "password", true);
-    private final ExpenseDto validDto = new ExpenseDto(100.0, "Food", "Lunch", LocalDate.now());
+    private final ExpenseRequest validDto = new ExpenseRequest(100.0, "Food", "Lunch", LocalDate.now());
     private final Expense testExpense = new Expense(1L, 100.0, "Lunch", "Food", LocalDate.now(), testUser);
     private final ExpenseResponseDto testResponseDto = new ExpenseResponseDto(1L, 100.0, "Lunch", "Food", LocalDate.now(), 1L, "ankit");
     
@@ -83,7 +83,7 @@ class ExpenseServiceTest {
     @Test
     void createExpense_shouldThrow_whenInvalidAmount() {
         // Arrange
-        ExpenseDto invalidDto = new ExpenseDto(-100.0, "Food", "Lunch", LocalDate.now());
+        ExpenseRequest invalidDto = new ExpenseRequest(-100.0, "Food", "Lunch", LocalDate.now());
 
         // Act & Assert
         assertThrows(ExpenseException.class, () -> 
@@ -93,7 +93,7 @@ class ExpenseServiceTest {
     @Test
     void createExpense_shouldUseCurrentDate_whenDateNotProvided() {
         // Arrange
-        ExpenseDto noDateDto = new ExpenseDto(100.0, "Food", "Lunch", null);
+        ExpenseRequest noDateDto = new ExpenseRequest(100.0, "Food", "Lunch", null);
         when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
 
         // Act
@@ -105,7 +105,7 @@ class ExpenseServiceTest {
     
     @Test
     void createExpense_shouldThrow_whenCategoryBlank() {
-        ExpenseDto invalidDto = new ExpenseDto(100.0, "   ", "Desc", LocalDate.now());
+        ExpenseRequest invalidDto = new ExpenseRequest(100.0, "   ", "Desc", LocalDate.now());
         assertThrows(ExpenseException.class, () -> 
             expenseService.createExpense(invalidDto, testUser));
     }
@@ -245,8 +245,8 @@ class ExpenseServiceTest {
             expenseService.generateMonthlyExcelReport(1L, 2023, 1));
     }
     //DTO classes testing
-    private ExpenseDto createTestDto(double amount, String category, String desc, LocalDate date) {
-        ExpenseDto dto = new ExpenseDto();
+    private ExpenseRequest createTestDto(double amount, String category, String desc, LocalDate date) {
+        ExpenseRequest dto = new ExpenseRequest();
         dto.setAmount(amount);
         dto.setCategory(category);
         dto.setDescription(desc);

@@ -2,6 +2,8 @@ package com.Assignment.Exception;
 
 import java.util.Map;
 
+import com.Assignment.Dto.ExpenseErrorCode;
+
 public class ExpenseException extends RuntimeException {
     private final ExpenseErrorCode errorCode;
     private final Map<String, Object> details;

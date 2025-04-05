@@ -1,4 +1,4 @@
-package com.Assignment.Exception;
+package com.Assignment.Dto;
 
 import org.springframework.http.HttpStatus;
 

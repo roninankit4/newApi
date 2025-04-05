@@ -1,4 +1,4 @@
-package com.Assignment.Entity;
+package com.Assignment.Dto;
 
 public enum Role {
 

@@ -3,12 +3,14 @@ package com.Assignment.Controller;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,8 @@ import com.Assignment.Dto.ExpenseDto;
 import com.Assignment.Dto.MonthlyReportDto;
 import com.Assignment.Entity.Expense;
 import com.Assignment.Entity.User;
+import com.Assignment.Exception.ExpenseErrorCode;
+import com.Assignment.Exception.ExpenseException;
 import com.Assignment.Service.ExpenseService;
 
 import jakarta.validation.Valid;
@@ -45,7 +49,20 @@ public class ExpenseController {
     @PostMapping
     public ResponseEntity<Expense> createExpense(
             @Valid @RequestBody ExpenseDto expenseDto,
+            BindingResult bindingResult,  // Captures @Valid errors
             @AuthenticationPrincipal User user) {
+        
+        // Handle @Valid errors (e.g., @NotBlank, @Positive)
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(err -> 
+                errors.put(err.getField(), err.getDefaultMessage()));
+            
+            throw new ExpenseException(
+                ExpenseErrorCode.VALIDATION_FAILED,
+                Map.of("violations", errors)
+            );
+        }
         return ResponseEntity.ok(expenseService.createExpense(expenseDto, user));
     }
 

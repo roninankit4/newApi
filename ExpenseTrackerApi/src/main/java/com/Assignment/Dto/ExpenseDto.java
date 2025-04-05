@@ -15,7 +15,6 @@ public class ExpenseDto {
     @NotBlank(message = "Category is required")
     private String category;
     
-    @NotNull(message = "Date is required")
     private LocalDate date; 
     
     public ExpenseDto(double amount, String description, String category, LocalDate date) {

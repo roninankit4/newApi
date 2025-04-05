@@ -8,7 +8,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.Assignment.Dto.ExpenseDto;
 import com.Assignment.Entity.Expense;
@@ -25,9 +30,6 @@ public class ExpenseService {
     private ExpenseRepository expenseRepository;
     
     @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
     private ExcelReportService excelReportService;
 
 
@@ -39,22 +41,38 @@ public class ExpenseService {
         return expenses;
     }
 
- // Create new expense (validates amount)
     public Expense createExpense(ExpenseDto dto, User user) {
+        // 1. Validate amount
         if (dto.getAmount() <= 0) {
-            throw new ExpenseException(ExpenseErrorCode.INVALID_AMOUNT);
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_AMOUNT,
+                Map.of("providedAmount", dto.getAmount())
+            );
         }
 
+        // 2. Validate category
+        if (dto.getCategory() == null || dto.getCategory().isBlank()) {
+            throw new ExpenseException(ExpenseErrorCode.CATEGORY_REQUIRED);
+        }
+
+        // 3. Validate date (if provided)
+        if (dto.getDate() != null && dto.getDate().isAfter(LocalDate.now())) {
+            throw new ExpenseException(
+                ExpenseErrorCode.INVALID_DATE,
+                Map.of("providedDate", dto.getDate())
+            );
+        }
+
+        // 4. Save expense
         Expense expense = new Expense();
         expense.setAmount(dto.getAmount());
         expense.setDescription(dto.getDescription());
         expense.setCategory(dto.getCategory());
-        expense.setDate(dto.getDate());
+        expense.setDate(dto.getDate() != null ? dto.getDate() : LocalDate.now());
         expense.setUser(user);
         
         return expenseRepository.save(expense);
     }
-
     public Expense updateExpense(Long id, ExpenseDto dto, User user) {
         Expense existing = expenseRepository.findByIdAndUserId(id, user.getId())
             .orElseThrow(() -> new ExpenseException(

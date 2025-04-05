@@ -8,6 +8,10 @@ public enum ExpenseErrorCode {
     NO_EXPENSES_FOUND("No expenses found for this user", HttpStatus.NOT_FOUND),
     INVALID_AMOUNT("Amount must be positive", HttpStatus.BAD_REQUEST),
     
+    VALIDATION_FAILED("Validation failed for one or more fields", HttpStatus.BAD_REQUEST),
+    INVALID_DATE("Date must be provided and cannot be in the future", HttpStatus.BAD_REQUEST),
+    CATEGORY_REQUIRED("Category is required and cannot be blank", HttpStatus.BAD_REQUEST),
+    
     // Business Logic
     INVALID_DATE_RANGE("Start date must be before end date", HttpStatus.BAD_REQUEST),
     INVALID_MONTH("Month must be between 1-12", HttpStatus.BAD_REQUEST),
